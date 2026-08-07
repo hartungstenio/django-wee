@@ -1,0 +1,238 @@
+[project]
+name = "django-wee"
+description = "Django application to handle short URLs"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [
+  { name = "Christian Hartung", email = "6785871+hartungstenio@users.noreply.github.com" },
+]
+keywords = ["django"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "asgiref (>=3.3)",
+  "django-sqids (>=0.2.2)",
+  "django-stubs-ext (>=4.2)",
+  "django (>=4.2)",
+  "typing-extensions; python_version < \"3.12\"",
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://github.com/hartungstenio/django-wee#readme"
+Issues = "https://github.com/hartungstenio/django-wee/issues"
+Source = "https://github.com/hartungstenio/django-wee"
+
+[dependency-groups]
+dev = [
+  "coverage[toml] (>=6.5)",
+  "django-stubs (>=4.2)",
+  "factory-boy",
+  "faker",
+  "mypy",
+  "pre-commit",
+  "pyrefly",
+  "pytest-asyncio",
+  "pytest-django",
+  "pytest",
+  "ruff",
+]
+
+[build-system]
+requires = ["hatch-vcs", "hatchling"]
+build-backend = "hatchling.build"
+
+[tool.coverage.run]
+source_pkgs = ["django_wee", "tests"]
+branch = true
+parallel = true
+
+[tool.coverage.paths]
+django_wee = [
+  "src/django_wee",
+  "*/django-wee/src/django_wee"
+]
+tests = ["tests", "*/django-wee/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.deptry]
+known_first_party = ["django_wee"]
+
+[tool.django-stubs]
+django_settings_module = "testproj.settings"
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.devcontainer", "/.github"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.envs.default]
+dependency-groups = ["dev"]
+
+[tool.hatch.envs.hatch-test]
+extra-dependencies = [
+  "pytest-asyncio",
+  "pytest-django",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+django = ["4.2"]
+python = ["3.10", "3.11", "3.12", "3.13"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+django = ["5.0", "5.1"]
+python = ["3.10", "3.11", "3.12"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+django = ["5.2"]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+django = ["6.0", "6.1"]
+python = ["3.12", "3.13", "3.14"]
+
+[tool.hatch.envs.hatch-test.overrides]
+matrix.django.dependencies = [
+  { value = "django>=4.2,<5.0", if = ["4.2"] },
+  { value = "django>=5.0,<5.1", if = ["5.0"] },
+  { value = "django>=5.1,<5.2", if = ["5.1"] },
+  { value = "django>=5.2,<6.0", if = ["5.2"] },
+  { value = "django>=6.0,<6.1", if = ["6.0"] },
+  { value = "django>=6.1,<6.2", if = ["6.1"] },
+]
+
+[tool.hatch.envs.hatch-static-analysis]
+skip-install = false
+config-path = "none"
+dependencies = ["ruff"]
+
+[tool.mypy]
+strict = true
+files = [
+  "src",
+  "testproj",
+  "tests",
+]
+plugins = ["mypy_django_plugin.main"]
+enable_error_code = ["deprecated"]
+
+[tool.pyrefly]
+project-includes = [
+  "src",
+  "testproj",
+  "tests",
+]
+preset = "strict"
+min-severity = "ignore"
+
+[tool.pytest]
+pythonpath = [".", "src"]
+DJANGO_SETTINGS_MODULE = "testproj.settings"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+typing-modules = ["django_wee._compat"]
+select = [
+  "ERA",
+  "YTT",
+  "ANN",
+  "ASYNC",
+  "S",
+  "BLE",
+  "FBT",
+  "B",
+  "A",
+  "COM",
+  "C4",
+  "DTZ",
+  "T10",
+  "DJ",
+  "EM",
+  "EXE",
+  "FIX",
+  "FA",
+  "INT",
+  "ISC",
+  "ICN",
+  "LOG",
+  "G",
+  "INP",
+  "PIE",
+  "T20",
+  "PT",
+  "Q",
+  "RSE",
+  "RET",
+  "SLF",
+  "SIM",
+  "SLOT",
+  "TID",
+  "TD",
+  "TC",
+  "ARG",
+  "PTH",
+  "FLY",
+  "I",
+  "C90",
+  "N",
+  "PERF",
+  "E",
+  "W",
+  "D",
+  "F",
+  "PGH",
+  "PL",
+  "UP",
+  "FURB",
+  "RUF",
+  "TRY"
+]
+ignore = ["COM812"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"*/migrations/*" = ["RUF012", "D"]
+"*/urls.py" = ["D"]
+"tests/*" = ["S101", "D"]
+"testproj/*" = ["D"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"

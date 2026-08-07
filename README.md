@@ -1,0 +1,107 @@
+# django-wee
+
+[![PyPI - Version](https://img.shields.io/pypi/v/django-wee.svg)](https://pypi.org/project/django-wee)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/django-wee.svg)](https://pypi.org/project/django-wee)
+
+A minimal Django application for creating and resolving short URLs, backed by [Sqids](https://sqids.org/) codes and Django's cache framework.
+
+---
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Settings reference](#settings-reference)
+- [License](#license)
+
+## Requirements
+
+- Python 3.10+
+- Django 4.2, 5.0, 5.1, 5.2, 6.0, or 6.1
+
+## Installation
+
+```console
+pip install django-wee
+```
+
+Add `django_wee` to `INSTALLED_APPS` and include its URL patterns:
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    ...
+    "django_wee",
+]
+```
+
+```python
+# urls.py
+from django.urls import include, path
+
+urlpatterns = [
+    ...
+    path("s/", include("django_wee.urls")),
+]
+```
+
+Then run the migrations:
+
+```console
+python manage.py migrate
+```
+
+### ASGI / async projects
+
+If your project runs under an ASGI server, use the async URL module instead:
+
+```python
+(path("s/", include("django_wee.urls_async")),)
+```
+
+## Configuration
+
+No mandatory configuration is required. See [Settings reference](#settings-reference) for optional tunables.
+
+## Usage
+
+### Creating short URLs
+
+Use the provided shortcut functions anywhere in your code:
+
+```python
+from django_wee.shortcuts import create_short_url
+
+short_path = create_short_url("https://example.com/a/very/long/url")
+# → "/s/aBcD1234/"
+```
+
+An async variant is also available:
+
+```python
+from django_wee.shortcuts import acreate_short_url
+
+short_path = await acreate_short_url("https://example.com/a/very/long/url")
+```
+
+Both functions validate the URL, persist a `ShortUrl` record, populate the cache, and return the relative redirect path.
+
+### Resolving short URLs
+
+Requests to `GET /s/<code>/` are handled automatically by the redirect view. The view checks the cache first and falls back to the database. The response type (301 or 302) is controlled by the `WEE_PERMANENT_REDIRECT` setting.
+
+## Settings reference
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `WEE_CACHE_ALIAS` | `"default"` | Cache alias (from `CACHES`) used to store short-URL mappings. |
+| `WEE_CACHE_TIMEOUT` | `3600` | Cache TTL in seconds. |
+| `WEE_MIN_LEN` | `8` | Minimum length of the generated Sqids code. |
+| `WEE_ALPHABET` | Sqids default | Character set used to generate codes. |
+| `WEE_PERMANENT_REDIRECT` | `True` | If `True`, the redirect view returns HTTP 301; otherwise HTTP 302. |
+
+## License
+
+`django-wee` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
