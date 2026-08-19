@@ -31,6 +31,13 @@ class ShortUrl(models.Model):
         help_text=_("Complete URL"),
         db_comment="Complete URL",
     )
+    expires_at = models.DateTimeField(
+        _("expiration timestamp"),
+        blank=True,
+        null=True,
+        help_text=_("When will this short url expire"),
+        db_comment="Expiration timestamp",
+    )
 
     class Meta(TypedModelMeta):
         """Metadata for :class:`ShortUrl`."""

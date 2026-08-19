@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from django.shortcuts import aget_object_or_404, get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+from django.utils.translation import gettext as _
 
-from ._internal import get_short_url_cache, redirect_to
+from ._internal import redirect_to
 from .models import ShortUrl
+from .shortcuts import aresolve_short_url, resolve_short_url
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -31,13 +34,13 @@ def redirect(_request: HttpRequest, code: str) -> HttpResponse:
     Raises:
         Http404: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
-    cache = get_short_url_cache()
-    url = cache.get(code)
-    if not url:
-        short_url = get_object_or_404(ShortUrl, code=code)
-        url = short_url.url
-
-    return redirect_to(url)
+    try:
+        url = resolve_short_url(code)
+    except ObjectDoesNotExist as exc:
+        msg = _("No %s matches the given query.") % ShortUrl._meta.object_name
+        raise Http404(msg) from exc
+    else:
+        return redirect_to(url)
 
 
 async def aredirect(_request: HttpRequest, code: str) -> HttpResponse:
@@ -60,10 +63,10 @@ async def aredirect(_request: HttpRequest, code: str) -> HttpResponse:
     Raises:
         Http404: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
-    cache = get_short_url_cache()
-    url = await cache.aget(code)
-    if not url:
-        short_url = await aget_object_or_404(ShortUrl, code=code)
-        url = short_url.url
-
-    return redirect_to(url)
+    try:
+        url = await aresolve_short_url(code)
+    except ObjectDoesNotExist as exc:
+        msg = _("No %s matches the given query.") % ShortUrl._meta.object_name
+        raise Http404(msg) from exc
+    else:
+        return redirect_to(url)
