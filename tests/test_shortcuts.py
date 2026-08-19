@@ -15,10 +15,10 @@ from .factories import ShortUrlFactory
 
 @pytest.mark.django_db
 class TestCreateShortUrl:
-    def test_returns_path_containing_code(self) -> None:
-        path = create_short_url("https://example.com")
-        short_url = ShortUrl.objects.get(url="https://example.com")
-        assert short_url.code in path
+    def test_returns_persisted_short_url(self) -> None:
+        short_url = create_short_url("https://example.com")
+        persisted = ShortUrl.objects.get(url="https://example.com")
+        assert short_url == persisted
 
     def test_persists_to_db_and_populates_cache(self) -> None:
         create_short_url("https://example.com")
@@ -45,10 +45,10 @@ class TestCreateShortUrl:
 
 @pytest.mark.django_db
 class TestACreateShortUrl:
-    def test_returns_path_containing_code(self) -> None:
-        path = async_to_sync(acreate_short_url)("https://example.com")
-        short_url = ShortUrl.objects.get(url="https://example.com")
-        assert short_url.code in path
+    def test_returns_persisted_short_url(self) -> None:
+        short_url = async_to_sync(acreate_short_url)("https://example.com")
+        persisted = ShortUrl.objects.get(url="https://example.com")
+        assert short_url == persisted
 
     def test_persists_to_db_and_populates_cache(self) -> None:
         async_to_sync(acreate_short_url)("https://example.com")
