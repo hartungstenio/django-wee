@@ -19,7 +19,7 @@ A minimal Django application for creating and resolving short URLs, backed by [S
 ## Requirements
 
 - Python 3.10+
-- Django 4.2, 5.0, 5.1, 5.2, 6.0, or 6.1
+- Django 5.2+
 
 ## Installation
 

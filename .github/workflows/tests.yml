@@ -28,20 +28,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup Hatch
-        run: pipx install hatch
+      - name: Install Hatch
+        run: pip install --upgrade hatch>=1.18.0
 
-      - name: Run linter
+      - name: Run static analysis
         run: hatch check code
 
-      - name: Run formatter
+      - name: Verify formatting
         run: hatch check fmt
 
-      - name: Type Checking (mypy)
-        run: hatch run mypy
-
-      - name: Type Checking (pyrefly)
-        run: hatch run pyrefly check
+      - name: Run type checks
+        run: hatch check types
 
       - name: Run tests
         run: |
