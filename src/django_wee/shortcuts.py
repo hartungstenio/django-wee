@@ -8,8 +8,6 @@ redirect path ready to be included in a response.
 from datetime import datetime
 
 from asgiref.sync import sync_to_async
-from django.db.models import Q
-from django.utils import timezone
 
 from ._internal import acache_short_url, cache_short_url, get_short_url_cache, get_short_url_cache_key
 from .models import ShortUrl
@@ -76,9 +74,7 @@ def resolve_short_url(code: str) -> str:
     cache = get_short_url_cache()
     url: str = cache.get(get_short_url_cache_key(code))
     if not url:
-        short_url = ShortUrl.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())).get(
-            code=code
-        )
+        short_url = ShortUrl.objects.alive().get(code=code)  # pyrefly: ignore [missing-attribute]
 
         url = short_url.url
     return url
@@ -97,8 +93,6 @@ async def aresolve_short_url(code: str) -> str:
     cache = get_short_url_cache()
     url: str = await cache.aget(get_short_url_cache_key(code))
     if not url:
-        short_url = await ShortUrl.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())).aget(
-            code=code
-        )
+        short_url = await ShortUrl.objects.alive().aget(code=code)  # pyrefly: ignore [missing-attribute]
         url = short_url.url
     return url

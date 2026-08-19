@@ -2,12 +2,26 @@
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_sqids import SqidsField
 from django_stubs_ext.db.models import TypedModelMeta
 from sqids.constants import DEFAULT_ALPHABET
 
-from ._compat import override
+from ._compat import Self, override
+
+
+class ShortUrlQuerySet(models.QuerySet["ShortUrl"]):
+    """Custom queryset for :class:`ShortUrl` with expiration-aware helpers."""
+
+    def alive(self) -> Self:
+        """Return short URLs that have not expired.
+
+        Includes records with no expiration (``expires_at`` is ``None``)
+        and records whose expiration is in the future.
+        """
+        return self.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
 
 
 class ShortUrl(models.Model):
@@ -38,6 +52,8 @@ class ShortUrl(models.Model):
         help_text=_("When will this short url expire"),
         db_comment="Expiration timestamp",
     )
+
+    objects = ShortUrlQuerySet.as_manager()
 
     class Meta(TypedModelMeta):
         """Metadata for :class:`ShortUrl`."""

@@ -30,6 +30,8 @@
 - Include both synchronous and asynchronous coverage when changing a paired API.
 - For expiration changes, cover unexpired, expired, and non-expiring records where applicable.
 - Run the focused test file first, then the full suite before finishing.
+- Group tests for a class or module in a single `Test<Name>` class and prefix each test with `test_<method>_` (e.g. `test_alive_...` for the `alive` queryset method).
+- Order test classes and methods to match the definition order in the corresponding source file.
 
 ## Change Scope
 
