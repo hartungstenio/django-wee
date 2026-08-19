@@ -119,6 +119,28 @@ Both functions validate the URL, persist a `ShortUrl` record, populate the cache
 
 Requests to `GET /s/<code>/` are handled automatically by the redirect view. The view checks the cache first and falls back to the database. Expired short URLs are not resolved. The response type (301 or 302) is controlled by the `WEE_PERMANENT_REDIRECT` setting.
 
+### Deleting expired URLs
+
+The `delete_expired_short_urls` management command removes expired short URLs from the database:
+
+```console
+python manage.py delete_expired_short_urls
+```
+
+By default, every short URL whose `expires_at` timestamp is in the past is deleted. Use `--older-than` to restrict the deletion to URLs that have been expired for at least the given duration:
+
+```console
+python manage.py delete_expired_short_urls --older-than "7 days"
+```
+
+The duration accepts any format supported by Django's `parse_duration` (e.g. `"7 days"`, `"12 hours"`, `"PT30M"`).
+
+Use `--dry-run` to preview how many URLs would be deleted without performing the deletion:
+
+```console
+python manage.py delete_expired_short_urls --older-than "7 days" --dry-run
+```
+
 ## Settings reference
 
 | Setting | Default | Description |
