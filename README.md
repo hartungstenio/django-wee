@@ -78,19 +78,40 @@ short_path = create_short_url("https://example.com/a/very/long/url")
 # → "/s/aBcD1234/"
 ```
 
+Pass an optional timezone-aware expiration datetime to create a URL that stops
+resolving after the specified time:
+
+```python
+from datetime import timedelta
+
+from django.utils import timezone
+
+from django_wee.shortcuts import create_short_url
+
+expiration = timezone.now() + timedelta(days=7)
+short_path = create_short_url("https://example.com/a/very/long/url", expiration)
+```
+
+If no expiration is provided, the short URL does not expire.
+
 An async variant is also available:
 
 ```python
+from datetime import timedelta
+
+from django.utils import timezone
+
 from django_wee.shortcuts import acreate_short_url
 
-short_path = await acreate_short_url("https://example.com/a/very/long/url")
+expiration = timezone.now() + timedelta(days=7)
+short_path = await acreate_short_url("https://example.com/a/very/long/url", expiration)
 ```
 
 Both functions validate the URL, persist a `ShortUrl` record, populate the cache, and return the relative redirect path.
 
 ### Resolving short URLs
 
-Requests to `GET /s/<code>/` are handled automatically by the redirect view. The view checks the cache first and falls back to the database. The response type (301 or 302) is controlled by the `WEE_PERMANENT_REDIRECT` setting.
+Requests to `GET /s/<code>/` are handled automatically by the redirect view. The view checks the cache first and falls back to the database. Expired short URLs are not resolved. The response type (301 or 302) is controlled by the `WEE_PERMANENT_REDIRECT` setting.
 
 ## Settings reference
 

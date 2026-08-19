@@ -35,4 +35,5 @@
 
 - Keep changes minimal and consistent with neighboring code.
 - Do not modify generated migration history or unrelated user changes.
+- Update `README.md` when a change affects documented behavior, public APIs, configuration, installation, or usage.
 - Update `CHANGELOG.md` for user-visible changes that are not yet part of a published release.
