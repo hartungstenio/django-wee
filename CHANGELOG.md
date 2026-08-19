@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `create_short_url` and `acreate_short_url` now return the persisted `ShortUrl` instance instead of the relative redirect path. Build the redirect path with `reverse("django_wee:redirect", args=[short_url.code])`.
+
 ## [0.0.1] - 2026-08-19
 
 ### Added

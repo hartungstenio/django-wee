@@ -72,9 +72,11 @@ No mandatory configuration is required. See [Settings reference](#settings-refer
 Use the provided shortcut functions anywhere in your code:
 
 ```python
+from django.urls import reverse
 from django_wee.shortcuts import create_short_url
 
-short_path = create_short_url("https://example.com/a/very/long/url")
+short_url = create_short_url("https://example.com/a/very/long/url")
+short_path = reverse("django_wee:redirect", args=[short_url.code])
 # → "/s/aBcD1234/"
 ```
 
@@ -84,12 +86,14 @@ resolving after the specified time:
 ```python
 from datetime import timedelta
 
+from django.urls import reverse
 from django.utils import timezone
 
 from django_wee.shortcuts import create_short_url
 
 expiration = timezone.now() + timedelta(days=7)
-short_path = create_short_url("https://example.com/a/very/long/url", expiration)
+short_url = create_short_url("https://example.com/a/very/long/url", expiration)
+short_path = reverse("django_wee:redirect", args=[short_url.code])
 ```
 
 If no expiration is provided, the short URL does not expire.
@@ -99,15 +103,17 @@ An async variant is also available:
 ```python
 from datetime import timedelta
 
+from django.urls import reverse
 from django.utils import timezone
 
 from django_wee.shortcuts import acreate_short_url
 
 expiration = timezone.now() + timedelta(days=7)
-short_path = await acreate_short_url("https://example.com/a/very/long/url", expiration)
+short_url = await acreate_short_url("https://example.com/a/very/long/url", expiration)
+short_path = reverse("django_wee:redirect", args=[short_url.code])
 ```
 
-Both functions validate the URL, persist a `ShortUrl` record, populate the cache, and return the relative redirect path.
+Both functions validate the URL, persist a `ShortUrl` record, populate the cache, and return the persisted `ShortUrl` instance.
 
 ### Resolving short URLs
 

@@ -9,24 +9,25 @@ from datetime import datetime
 
 from asgiref.sync import sync_to_async
 from django.db.models import Q
-from django.urls import reverse
 from django.utils import timezone
 
 from ._internal import acache_short_url, cache_short_url, get_short_url_cache, get_short_url_cache_key
 from .models import ShortUrl
 
 
-def create_short_url(url: str, expiration: datetime | None = None) -> str:
-    """Create a short URL for the given URL and return its redirect path.
+def create_short_url(url: str, expiration: datetime | None = None) -> ShortUrl:
+    """Create a short URL for the given URL and return the persisted instance.
 
     Validates, persists, and caches the new ``ShortUrl`` instance, then
-    returns the relative URL for the ``django_wee:redirect`` view.
+    returns it. Build the redirect path with
+    :func:`~django.urls.reverse` and the ``django_wee:redirect`` view
+    using ``short_url.code``.
 
     Args:
         url: The destination URL to shorten.
 
     Returns:
-        The relative path (e.g. ``/s/abc123``) that redirects to *url*.
+        The persisted :class:`~django_wee.models.ShortUrl` instance.
 
     Raises:
         ValidationError: If *url* fails model-level validation.
@@ -35,23 +36,24 @@ def create_short_url(url: str, expiration: datetime | None = None) -> str:
     short_url.full_clean()
     short_url.save()
     cache_short_url(short_url)
-    return reverse("django_wee:redirect", args=[short_url.code])
+    return short_url
 
 
-async def acreate_short_url(url: str, expiration: datetime | None = None) -> str:
-    """Create a short URL for the given URL and return its redirect path.
+async def acreate_short_url(url: str, expiration: datetime | None = None) -> ShortUrl:
+    """Create a short URL for the given URL and return the persisted instance.
 
     Async version of :func:`create_short_url`.
 
     Validates, persists, and caches the new ``ShortUrl`` instance
-    asynchronously, then returns the relative URL for the
-    ``django_wee:redirect`` view.
+    asynchronously, then returns it. Build the redirect path with
+    :func:`~django.urls.reverse` and the ``django_wee:redirect`` view
+    using ``short_url.code``.
 
     Args:
         url: The destination URL to shorten.
 
     Returns:
-        The relative path (e.g. ``/s/abc123``) that redirects to *url*.
+        The persisted :class:`~django_wee.models.ShortUrl` instance.
 
     Raises:
         ValidationError: If *url* fails model-level validation.
@@ -60,7 +62,7 @@ async def acreate_short_url(url: str, expiration: datetime | None = None) -> str
     await sync_to_async(short_url.full_clean)()
     await short_url.asave()
     await acache_short_url(short_url)
-    return reverse("django_wee:redirect", args=[short_url.code])
+    return short_url
 
 
 def resolve_short_url(code: str) -> str:
