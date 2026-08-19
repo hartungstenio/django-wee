@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `ShortUrlQuerySet` custom queryset with an `alive()` method that filters out expired short URLs, used by `resolve_short_url` and `aresolve_short_url`.
+- `resolve_short_url` and `aresolve_short_url` now populate the cache after a database lookup on a cache miss.
 
 ## [0.0.1] - 2026-08-19
 

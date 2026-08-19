@@ -93,6 +93,13 @@ class TestResolveShortUrl:
 
         assert resolve_short_url(short_url.code) == short_url.url
 
+    def test_populates_cache_after_db_lookup(self) -> None:
+        short_url = ShortUrlFactory.create()
+
+        resolve_short_url(short_url.code)
+
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == short_url.url
+
     def test_expired_code_raises(self) -> None:
         short_url = ShortUrlFactory.create(expires_at=timezone.now())
 
@@ -123,6 +130,13 @@ class TestAResolveShortUrl:
         short_url = ShortUrlFactory.create()
 
         assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
+
+    def test_populates_cache_after_db_lookup(self) -> None:
+        short_url = ShortUrlFactory.create()
+
+        async_to_sync(aresolve_short_url)(short_url.code)
+
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == short_url.url
 
     def test_expired_code_raises(self) -> None:
         short_url = ShortUrlFactory.create(expires_at=timezone.now())
