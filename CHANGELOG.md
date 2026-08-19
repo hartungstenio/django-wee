@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-08-19
+
 ### Added
 
 - Add expiration support to short URLs through the `expires_at` field and database migration.
@@ -14,4 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add test coverage for expiration persistence and resolution.
 - Prevent resolution of short URLs after their expiration time.
 
-[unreleased]: https://github.com/hartungstenio/django-wee/releases
+[unreleased]: https://github.com/hartungstenio/django-wee/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/hartungstenio/django-wee/releases/tag/v0.0.1
