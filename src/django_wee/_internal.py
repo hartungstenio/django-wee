@@ -19,6 +19,10 @@ def get_short_url_cache_timeout() -> float:
     return getattr(settings, "WEE_CACHE_ALIAS", 3600)
 
 
+def get_short_url_cache_key(code: str) -> str:
+    return f'{getattr(settings, "WEE_CACHE_PREFIX", "WEE")}:{code}'
+
+
 def redirect_to(url: str) -> HttpResponse:
     if getattr(settings, "WEE_PERMANENT_REDIRECT", True):
         return HttpResponsePermanentRedirect(url)
@@ -33,7 +37,7 @@ def cache_short_url(short_url: ShortUrl) -> None:
         expiration = short_url.expires_at - timezone.now()
         timeout = max(timeout, expiration.total_seconds())
 
-    cache.set(short_url.code, short_url.url, timeout=get_short_url_cache_timeout())
+    cache.set(get_short_url_cache_key(short_url.code), short_url.url, timeout=timeout)
 
 
 async def acache_short_url(short_url: ShortUrl) -> None:
@@ -44,4 +48,4 @@ async def acache_short_url(short_url: ShortUrl) -> None:
         expiration = short_url.expires_at - timezone.now()
         timeout = max(timeout, expiration.total_seconds())
 
-    await cache.aset(short_url.code, short_url.url, timeout=get_short_url_cache_timeout())
+    await cache.aset(get_short_url_cache_key(short_url.code), short_url.url, timeout=timeout)

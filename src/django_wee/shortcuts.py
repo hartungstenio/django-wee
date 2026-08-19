@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
-from ._internal import acache_short_url, cache_short_url, get_short_url_cache
+from ._internal import acache_short_url, cache_short_url, get_short_url_cache, get_short_url_cache_key
 from .models import ShortUrl
 
 
@@ -72,7 +72,7 @@ def resolve_short_url(code: str) -> str:
         ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
     cache = get_short_url_cache()
-    url: str = cache.get(code)
+    url: str = cache.get(get_short_url_cache_key(code))
     if not url:
         short_url = ShortUrl.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())).get(
             code=code
@@ -93,7 +93,7 @@ async def aresolve_short_url(code: str) -> str:
         ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
     cache = get_short_url_cache()
-    url: str = await cache.aget(code)
+    url: str = await cache.aget(get_short_url_cache_key(code))
     if not url:
         short_url = await ShortUrl.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())).aget(
             code=code
