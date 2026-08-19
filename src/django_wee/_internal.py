@@ -20,7 +20,7 @@ def get_short_url_cache_timeout() -> float:
 
 
 def get_short_url_cache_key(code: str) -> str:
-    return f'{getattr(settings, "WEE_CACHE_PREFIX", "WEE")}:{code}'
+    return f"{getattr(settings, 'WEE_CACHE_PREFIX', 'WEE')}:{code}"
 
 
 def redirect_to(url: str) -> HttpResponse:
