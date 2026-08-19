@@ -119,6 +119,7 @@ Requests to `GET /s/<code>/` are handled automatically by the redirect view. The
 | --- | --- | --- |
 | `WEE_CACHE_ALIAS` | `"default"` | Cache alias (from `CACHES`) used to store short-URL mappings. |
 | `WEE_CACHE_TIMEOUT` | `3600` | Cache TTL in seconds. |
+| `WEE_CACHE_PREFIX` | `"WEE"` | Prefix used for short-URL cache keys. Keys use the `prefix:code` format. |
 | `WEE_MIN_LEN` | `8` | Minimum length of the generated Sqids code. |
 | `WEE_ALPHABET` | Sqids default | Character set used to generate codes. |
 | `WEE_PERMANENT_REDIRECT` | `True` | If `True`, the redirect view returns HTTP 301; otherwise HTTP 302. |

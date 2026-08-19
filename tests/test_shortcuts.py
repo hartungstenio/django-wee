@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from asgiref.sync import async_to_sync
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.test import override_settings
 from django.utils import timezone
 
 from django_wee._internal import get_short_url_cache
@@ -22,7 +23,7 @@ class TestCreateShortUrl:
     def test_persists_to_db_and_populates_cache(self) -> None:
         create_short_url("https://example.com")
         short_url = ShortUrl.objects.get(url="https://example.com")
-        assert get_short_url_cache().get(short_url.code) == "https://example.com"
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
 
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
@@ -52,7 +53,7 @@ class TestACreateShortUrl:
     def test_persists_to_db_and_populates_cache(self) -> None:
         async_to_sync(acreate_short_url)("https://example.com")
         short_url = ShortUrl.objects.get(url="https://example.com")
-        assert get_short_url_cache().get(short_url.code) == "https://example.com"
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
 
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
@@ -76,7 +77,14 @@ class TestACreateShortUrl:
 class TestResolveShortUrl:
     def test_returns_url_from_cache(self) -> None:
         short_url = ShortUrlFactory.create()
-        get_short_url_cache().set(short_url.code, short_url.url)
+        get_short_url_cache().set(f"WEE:{short_url.code}", short_url.url)
+
+        assert resolve_short_url(short_url.code) == short_url.url
+
+    @override_settings(WEE_CACHE_PREFIX="custom")
+    def test_uses_configured_cache_prefix(self) -> None:
+        short_url = ShortUrlFactory.create()
+        get_short_url_cache().set(f"custom:{short_url.code}", short_url.url)
 
         assert resolve_short_url(short_url.code) == short_url.url
 
@@ -100,7 +108,14 @@ class TestResolveShortUrl:
 class TestAResolveShortUrl:
     def test_returns_url_from_cache(self) -> None:
         short_url = ShortUrlFactory.create()
-        get_short_url_cache().set(short_url.code, short_url.url)
+        get_short_url_cache().set(f"WEE:{short_url.code}", short_url.url)
+
+        assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
+
+    @override_settings(WEE_CACHE_PREFIX="custom")
+    def test_uses_configured_cache_prefix(self) -> None:
+        short_url = ShortUrlFactory.create()
+        get_short_url_cache().set(f"custom:{short_url.code}", short_url.url)
 
         assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
 
