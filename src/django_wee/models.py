@@ -7,6 +7,8 @@ from django_sqids import SqidsField
 from django_stubs_ext.db.models import TypedModelMeta
 from sqids.constants import DEFAULT_ALPHABET
 
+from ._compat import override
+
 
 class ShortUrl(models.Model):
     """Stores a mapping between a Sqids-based short code and its destination URL.
@@ -45,6 +47,7 @@ class ShortUrl(models.Model):
             ),
         )
 
+    @override
     def __str__(self) -> str:
         """Return the short code as the string representation."""
         return f"{self.code}: {self.url}"
