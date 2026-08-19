@@ -7,14 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-19
+
 ### Changed
 
-- `create_short_url` and `acreate_short_url` now return the persisted `ShortUrl` instance instead of the relative redirect path. Build the redirect path with `reverse("django_wee:redirect", args=[short_url.code])`.
+- **Breaking**: `create_short_url` and `acreate_short_url` now return the persisted `ShortUrl` instance instead of the relative redirect path. Build the redirect path with `reverse("django_wee:redirect", args=[short_url.code])`.
 
 ### Added
 
 - `ShortUrlQuerySet` custom queryset with an `alive()` method that filters out expired short URLs, used by `resolve_short_url` and `aresolve_short_url`.
 - `resolve_short_url` and `aresolve_short_url` now populate the cache after a database lookup on a cache miss.
+- `delete_expired_short_urls` management command that deletes expired short URLs, with an optional `--older-than` parameter to restrict deletion to URLs expired for at least the given duration and a `--dry-run` flag to preview the deletion.
 
 ## [0.0.1] - 2026-08-19
 
@@ -25,5 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add test coverage for expiration persistence and resolution.
 - Prevent resolution of short URLs after their expiration time.
 
-[unreleased]: https://github.com/hartungstenio/django-wee/compare/v0.0.1...HEAD
+[unreleased]: https://github.com/hartungstenio/django-wee/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/hartungstenio/django-wee/releases/tag/v0.1.0
 [0.0.1]: https://github.com/hartungstenio/django-wee/releases/tag/v0.0.1
