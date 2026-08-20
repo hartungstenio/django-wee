@@ -67,8 +67,10 @@ class Command(BaseCommand):
         older_than = cast("timedelta | None", options["older_than"])
         dry_run = cast("bool", options["dry_run"])
 
-        threshold = timezone.now() - older_than if older_than is not None else timezone.now()
-        queryset = ShortUrl.objects.filter(expires_at__lte=threshold)
+        queryset = ShortUrl.objects.expired()  # pyrefly: ignore [missing-attribute]
+        if older_than:
+            threshold = timezone.now() - older_than
+            queryset = queryset.filter(expires_at__lte=threshold)
         count = queryset.count()
 
         if dry_run:

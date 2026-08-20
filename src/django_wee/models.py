@@ -23,6 +23,15 @@ class ShortUrlQuerySet(models.QuerySet["ShortUrl"]):
         """
         return self.filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
 
+    def expired(self) -> Self:
+        """Return short URLs that have expired.
+
+        Includes only records whose expiration is set and in the past.
+        Records with no expiration (``expires_at`` is ``None``) are
+        excluded.
+        """
+        return self.filter(expires_at__isnull=False, expires_at__lte=timezone.now())
+
 
 class ShortUrl(models.Model):
     """Stores a mapping between a Sqids-based short code and its destination URL.
