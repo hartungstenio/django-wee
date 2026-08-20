@@ -70,10 +70,13 @@ class TestCreateShortUrl:
         with pytest.raises(ValidationError):
             create_short_url("not-a-url")
 
-    def test_duplicate_url_raises(self) -> None:
+    def test_allows_duplicate_url(self) -> None:
         existing = ShortUrlFactory.create()
-        with pytest.raises(ValidationError):
-            create_short_url(existing.url)
+        duplicate = create_short_url(existing.url)
+
+        assert duplicate.pk is not None
+        assert duplicate.url == existing.url
+        assert duplicate.pk != existing.pk
 
 
 @pytest.mark.django_db
@@ -133,10 +136,13 @@ class TestACreateShortUrl:
         with pytest.raises(ValidationError):
             async_to_sync(acreate_short_url)("not-a-url")
 
-    def test_duplicate_url_raises(self) -> None:
+    def test_allows_duplicate_url(self) -> None:
         existing = ShortUrlFactory.create()
-        with pytest.raises(ValidationError):
-            async_to_sync(acreate_short_url)(existing.url)
+        duplicate = async_to_sync(acreate_short_url)(existing.url)
+
+        assert duplicate.pk is not None
+        assert duplicate.url == existing.url
+        assert duplicate.pk != existing.pk
 
 
 @pytest.mark.django_db
