@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `create_short_url` and `acreate_short_url` now accept a `ttl` keyword argument (`int`, `float`, or `timedelta`) as an alternative to `expiration`. `expiration` and `ttl` are mutually exclusive and raise `ValueError` when both are given.
 - `ShortUrlQuerySet.expired()` method that returns short URLs whose `expires_at` is set and in the past, complementing `alive()`.
 
 ### Changed
