@@ -129,6 +129,8 @@ short_path = reverse("django_wee:redirect", args=[short_url.code])
 
 Both functions validate the URL, persist a `ShortUrl` record, populate the cache, and return the persisted `ShortUrl` instance.
 
+URLs without a scheme are normalized to `https://` before validation and persistence. For example, `create_short_url("example.com")` stores `https://example.com`. Protocol-relative URLs (`//example.com`) receive an `https:` prefix, and URLs that already include a scheme are left unchanged.
+
 ### Resolving short URLs
 
 Requests to `GET /s/<code>/` are handled automatically by the redirect view. The view checks the cache first and falls back to the database. Expired short URLs are not resolved. The response type (301 or 302) is controlled by the `WEE_PERMANENT_REDIRECT` setting.

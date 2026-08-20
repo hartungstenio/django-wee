@@ -7,6 +7,7 @@ redirect path ready to be included in a response.
 
 from datetime import datetime, timedelta
 from typing import overload
+from urllib.parse import urlparse
 
 from asgiref.sync import sync_to_async
 from django.utils import timezone
@@ -20,6 +21,21 @@ from ._internal import (
 from .models import ShortUrl
 
 _EXPIRATION_TTL_MUTUALLY_EXCLUSIVE = "expiration and ttl are mutually exclusive"
+
+
+def _normalize_url(url: str) -> str:
+    """Prepend ``https://`` when *url* has no scheme.
+
+    A schemeless URL such as ``"example.com"`` becomes
+    ``"https://example.com"``. Protocol-relative URLs (``"//example.com"``)
+    receive only the ``https:`` prefix. URLs that already include a scheme
+    are returned unchanged.
+    """
+    if urlparse(url).scheme:
+        return url
+    if url.startswith("//"):
+        return f"https:{url}"
+    return f"https://{url}"
 
 
 def _resolve_expiration(
@@ -84,7 +100,7 @@ def create_short_url(
         ValidationError: If *url* fails model-level validation.
         ValueError: If both *expiration* and *ttl* are given.
     """
-    short_url = ShortUrl(url=url, expires_at=_resolve_expiration(expiration, ttl))
+    short_url = ShortUrl(url=_normalize_url(url), expires_at=_resolve_expiration(expiration, ttl))
     short_url.full_clean()
     short_url.save()
     cache_short_url(short_url)
@@ -137,7 +153,7 @@ async def acreate_short_url(
         ValidationError: If *url* fails model-level validation.
         ValueError: If both *expiration* and *ttl* are given.
     """
-    short_url = ShortUrl(url=url, expires_at=_resolve_expiration(expiration, ttl))
+    short_url = ShortUrl(url=_normalize_url(url), expires_at=_resolve_expiration(expiration, ttl))
     await sync_to_async(short_url.full_clean)()
     await short_url.asave()
     await acache_short_url(short_url)
