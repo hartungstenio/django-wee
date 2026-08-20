@@ -2,7 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.utils import timezone
 
 from django_wee.models import ShortUrl
@@ -77,12 +76,10 @@ class TestShortUrl:
         with pytest.raises(ValidationError):
             ShortUrl(url="not-a-url").full_clean()
 
-    def test_duplicate_url_raises_on_full_clean(self) -> None:
+    def test_allows_duplicate_urls(self) -> None:
         existing = ShortUrlFactory.create()
-        with pytest.raises(ValidationError):
-            ShortUrl(url=existing.url).full_clean()
+        duplicate = ShortUrl.objects.create(url=existing.url)
 
-    def test_duplicate_url_raises_integrity_error_at_db_level(self) -> None:
-        existing = ShortUrlFactory.create()
-        with pytest.raises(IntegrityError):
-            ShortUrl.objects.create(url=existing.url)
+        assert duplicate.pk is not None
+        assert duplicate.url == existing.url
+        assert duplicate.pk != existing.pk

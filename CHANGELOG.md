@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking**: removed the unique constraint on `ShortUrl.url`. The same destination URL may now be shortened multiple times, each with its own code and expiration. `create_short_url` and `acreate_short_url` no longer raise `ValidationError` for duplicate URLs.
 - `delete_expired_short_urls` management command now uses the `ShortUrlQuerySet.expired()` method to select URLs for deletion.
 
 ## [0.1.0] - 2026-08-19

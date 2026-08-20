@@ -70,14 +70,6 @@ class ShortUrl(models.Model):
         verbose_name = _("Short URL")
         verbose_name_plural = _("Short URLs")
         db_table_comment = "Short URLs"
-        constraints = (
-            models.UniqueConstraint(
-                fields=("url",),
-                name="%(app_label)s_%(class)s_url_unq",
-                violation_error_code="unique",
-                violation_error_message=_("URL already exists."),
-            ),
-        )
 
     @override
     def __str__(self) -> str:
