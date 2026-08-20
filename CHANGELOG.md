@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ShortUrlQuerySet.expired()` method that returns short URLs whose `expires_at` is set and in the past, complementing `alive()`.
+
+### Changed
+
+- `delete_expired_short_urls` management command now uses the `ShortUrlQuerySet.expired()` method to select URLs for deletion.
+
 ## [0.1.0] - 2026-08-19
 
 ### Changed

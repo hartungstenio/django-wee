@@ -41,6 +41,35 @@ class TestShortUrlQuerySet:
 
         assert set(ShortUrl.objects.alive()) == {alive_no_expiration, alive_future}
 
+    def test_expired_excludes_non_expiring_records(self) -> None:
+        ShortUrlFactory.create(expires_at=None)
+
+        assert list(ShortUrl.objects.expired()) == []
+
+    def test_expired_excludes_unexpired_records(self) -> None:
+        ShortUrlFactory.create(expires_at=timezone.now() + timedelta(days=1))
+
+        assert list(ShortUrl.objects.expired()) == []
+
+    def test_expired_includes_expired_records(self) -> None:
+        expiration = timezone.now() - timedelta(days=1)
+        short_url = ShortUrlFactory.create(expires_at=expiration)
+
+        assert list(ShortUrl.objects.expired()) == [short_url]
+
+    def test_expired_includes_exactly_expired_records(self) -> None:
+        short_url = ShortUrlFactory.create(expires_at=timezone.now())
+
+        assert list(ShortUrl.objects.expired()) == [short_url]
+
+    def test_expired_returns_only_expired_among_mixed_records(self) -> None:
+        ShortUrlFactory.create(expires_at=None)
+        ShortUrlFactory.create(expires_at=timezone.now() + timedelta(days=1))
+        expired_past = ShortUrlFactory.create(expires_at=timezone.now() - timedelta(days=1))
+        expired_now = ShortUrlFactory.create(expires_at=timezone.now())
+
+        assert set(ShortUrl.objects.expired()) == {expired_past, expired_now}
+
 
 @pytest.mark.django_db
 class TestShortUrl:
