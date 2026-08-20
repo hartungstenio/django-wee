@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
 ### Added
 
 - `create_short_url` and `acreate_short_url` now accept a `ttl` keyword argument (`int`, `float`, or `timedelta`) as an alternative to `expiration`. `expiration` and `ttl` are mutually exclusive and raise `ValueError` when both are given.
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking**: `expiration` is now a keyword-only argument of `create_short_url` and `acreate_short_url`. Calls that pass `expiration` positionally must be updated to use `expiration=...`. The new `ttl` keyword argument is also keyword-only.
 - **Breaking**: removed the unique constraint on `ShortUrl.url`. The same destination URL may now be shortened multiple times, each with its own code and expiration. `create_short_url` and `acreate_short_url` no longer raise `ValidationError` for duplicate URLs.
 - `create_short_url` and `acreate_short_url` now normalize URLs without a scheme to `https://` (e.g. `example.com` becomes `https://example.com`). Protocol-relative URLs receive an `https:` prefix, and URLs that already include a scheme are left unchanged.
 - `delete_expired_short_urls` management command now uses the `ShortUrlQuerySet.expired()` method to select URLs for deletion.
@@ -39,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add test coverage for expiration persistence and resolution.
 - Prevent resolution of short URLs after their expiration time.
 
-[unreleased]: https://github.com/hartungstenio/django-wee/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/hartungstenio/django-wee/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/hartungstenio/django-wee/releases/tag/v0.2.0
 [0.1.0]: https://github.com/hartungstenio/django-wee/releases/tag/v0.1.0
 [0.0.1]: https://github.com/hartungstenio/django-wee/releases/tag/v0.0.1
