@@ -28,10 +28,43 @@ class TestCreateShortUrl:
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
 
-        create_short_url("https://example.com", expiration)
+        create_short_url("https://example.com", expiration=expiration)
 
         short_url = ShortUrl.objects.get(url="https://example.com")
         assert short_url.expires_at == expiration
+
+    def test_persists_ttl_as_int_seconds(self) -> None:
+        before = timezone.now()
+
+        create_short_url("https://example.com", ttl=3600)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=3600) <= short_url.expires_at <= timezone.now() + timedelta(seconds=3600)
+
+    def test_persists_ttl_as_float_seconds(self) -> None:
+        before = timezone.now()
+
+        create_short_url("https://example.com", ttl=1.5)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=1.5) <= short_url.expires_at <= timezone.now() + timedelta(seconds=1.5)
+
+    def test_persists_ttl_as_timedelta(self) -> None:
+        before = timezone.now()
+        delta = timedelta(hours=2)
+
+        create_short_url("https://example.com", ttl=delta)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + delta <= short_url.expires_at <= timezone.now() + delta
+
+    def test_expiration_and_ttl_are_mutually_exclusive(self) -> None:
+        expiration = timezone.now() + timedelta(days=1)
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            create_short_url("https://example.com", expiration=expiration, ttl=3600)  # type: ignore[call-overload]
 
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
@@ -58,10 +91,43 @@ class TestACreateShortUrl:
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
 
-        async_to_sync(acreate_short_url)("https://example.com", expiration)
+        async_to_sync(acreate_short_url)("https://example.com", expiration=expiration)
 
         short_url = ShortUrl.objects.get(url="https://example.com")
         assert short_url.expires_at == expiration
+
+    def test_persists_ttl_as_int_seconds(self) -> None:
+        before = timezone.now()
+
+        async_to_sync(acreate_short_url)("https://example.com", ttl=3600)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=3600) <= short_url.expires_at <= timezone.now() + timedelta(seconds=3600)
+
+    def test_persists_ttl_as_float_seconds(self) -> None:
+        before = timezone.now()
+
+        async_to_sync(acreate_short_url)("https://example.com", ttl=1.5)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=1.5) <= short_url.expires_at <= timezone.now() + timedelta(seconds=1.5)
+
+    def test_persists_ttl_as_timedelta(self) -> None:
+        before = timezone.now()
+        delta = timedelta(hours=2)
+
+        async_to_sync(acreate_short_url)("https://example.com", ttl=delta)
+
+        short_url = ShortUrl.objects.get(url="https://example.com")
+        assert short_url.expires_at is not None
+        assert before + delta <= short_url.expires_at <= timezone.now() + delta
+
+    def test_expiration_and_ttl_are_mutually_exclusive(self) -> None:
+        expiration = timezone.now() + timedelta(days=1)
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            async_to_sync(acreate_short_url)("https://example.com", expiration=expiration, ttl=3600)
 
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):

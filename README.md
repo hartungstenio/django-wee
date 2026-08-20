@@ -92,11 +92,25 @@ from django.utils import timezone
 from django_wee.shortcuts import create_short_url
 
 expiration = timezone.now() + timedelta(days=7)
-short_url = create_short_url("https://example.com/a/very/long/url", expiration)
+short_url = create_short_url("https://example.com/a/very/long/url", expiration=expiration)
 short_path = reverse("django_wee:redirect", args=[short_url.code])
 ```
 
 If no expiration is provided, the short URL does not expire.
+
+Alternatively, pass a `ttl` (time-to-live) to compute the expiration as a
+offset from now. An `int` or `float` is interpreted as seconds, and a
+`timedelta` is used directly. `expiration` and `ttl` are mutually exclusive:
+
+```python
+from datetime import timedelta
+
+from django.urls import reverse
+from django_wee.shortcuts import create_short_url
+
+short_url = create_short_url("https://example.com/a/very/long/url", ttl=timedelta(days=7))
+short_path = reverse("django_wee:redirect", args=[short_url.code])
+```
 
 An async variant is also available:
 
@@ -109,7 +123,7 @@ from django.utils import timezone
 from django_wee.shortcuts import acreate_short_url
 
 expiration = timezone.now() + timedelta(days=7)
-short_url = await acreate_short_url("https://example.com/a/very/long/url", expiration)
+short_url = await acreate_short_url("https://example.com/a/very/long/url", expiration=expiration)
 short_path = reverse("django_wee:redirect", args=[short_url.code])
 ```
 

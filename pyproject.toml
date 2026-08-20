@@ -231,3 +231,4 @@ ban-relative-imports = "parents"
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
+ignore-decorators = ["typing.overload"]
