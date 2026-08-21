@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-21
+
+### Changed
+
+- `ShortUrl.url` `max_length` increased from the Django `URLField` default (200) to 4096 to support long URLs such as S3 pre-signed URLs.
+
 ## [0.2.0] - 2026-08-20
 
 ### Added
