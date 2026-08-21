@@ -14,6 +14,7 @@
 - Run code quality checks with `hatch check code`.
 - Verify formatting with `hatch check fmt`.
 - Run strict type checks with `hatch check types`.
+- Generate migrations with `hatch run ./manage.py makemigrations django_wee -n "friendly_name"`; never hand-write migrations.
 
 ## Python and Django Conventions
 
