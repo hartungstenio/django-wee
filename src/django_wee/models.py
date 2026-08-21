@@ -51,6 +51,7 @@ class ShortUrl(models.Model):
     )
     url = models.URLField(
         _("original URL"),
+        max_length=4096,
         help_text=_("Complete URL"),
         db_comment="Complete URL",
     )
