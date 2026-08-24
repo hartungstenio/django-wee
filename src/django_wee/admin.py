@@ -13,4 +13,6 @@ class ShortUrlAdmin(admin.ModelAdmin[ShortUrl]):
     change list.
     """
 
-    list_display = ("code", "url")
+    list_display = ("code", "url", "expires_at")
+    search_fields = ("code__exact", "url")
+    list_filter = ("expires_at",)
