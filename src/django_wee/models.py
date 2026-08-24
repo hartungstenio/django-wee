@@ -44,10 +44,10 @@ class ShortUrl(models.Model):
 
     code = SqidsField(
         "id",
-        _("Short url code"),
+        _("code"),
         min_length=getattr(settings, "WEE_MIN_LEN", 8),
         alphabet=getattr(settings, "WEE_ALPHABET", DEFAULT_ALPHABET),
-        help_text=_("Short url code."),
+        help_text=_("Short url code"),
     )
     url = models.URLField(
         _("original URL"),

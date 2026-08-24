@@ -1,0 +1,56 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-24 20:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/django_wee/models.py:47
+msgid "code"
+msgstr "código"
+
+#: src/django_wee/models.py:50
+msgid "Short url code"
+msgstr "Código da URL encurtada"
+
+#: src/django_wee/models.py:53
+msgid "original URL"
+msgstr "URL original"
+
+#: src/django_wee/models.py:55
+msgid "Complete URL"
+msgstr "URL completa"
+
+#: src/django_wee/models.py:59
+msgid "expiration timestamp"
+msgstr "data/hora de expiração"
+
+#: src/django_wee/models.py:62
+msgid "When will this short url expire"
+msgstr "Quando essa url encurtada expirará"
+
+#: src/django_wee/models.py:71
+msgid "Short URL"
+msgstr "URL Encurtada"
+
+#: src/django_wee/models.py:72
+msgid "Short URLs"
+msgstr "URLs Encurtadas"
+
+#: src/django_wee/views.py:40 src/django_wee/views.py:69
+#, python-format
+msgid "No %s matches the given query."
+msgstr "Nenhum %s corresponde à consulta."
