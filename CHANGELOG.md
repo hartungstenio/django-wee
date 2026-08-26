@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All significant operations now emit structured log records via the `django_wee` logger: URL creation (`INFO`), cache hits/misses/writes and redirects (`DEBUG`), and cache errors (`ERROR`). Enable with a standard Django `LOGGING` configuration targeting the `django_wee` logger.
 - New `WEE_DEFAULT_TTL` setting: a project-wide default TTL (`int`/`float` seconds or `timedelta`) applied when `create_short_url` and `acreate_short_url` are called without an explicit `expiration` or `ttl`. When absent, the previous behaviour (no expiration) is preserved.
+- Passing a negative `ttl` to `create_short_url` or `acreate_short_url` now raises `ValueError` immediately.
+- Passing a zero `ttl` emits a `UserWarning` (the short URL will expire immediately upon creation).
 
 ## [0.2.2] - 2026-08-24
 

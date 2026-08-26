@@ -108,6 +108,22 @@ class TestCreateShortUrl:
         assert short_url.expires_at is not None
         assert before + delta <= short_url.expires_at <= timezone.now() + delta
 
+    def test_negative_ttl_as_seconds_raises(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            create_short_url("https://example.com", ttl=-1)
+
+    def test_negative_ttl_as_timedelta_raises(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            create_short_url("https://example.com", ttl=timedelta(seconds=-1))
+
+    def test_zero_ttl_as_seconds_warns(self) -> None:
+        with pytest.warns(UserWarning, match="expire immediately"):
+            create_short_url("https://example.com", ttl=0)
+
+    def test_zero_ttl_as_timedelta_warns(self) -> None:
+        with pytest.warns(UserWarning, match="expire immediately"):
+            create_short_url("https://example.com", ttl=timedelta(0))
+
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
             create_short_url("not a url")
@@ -226,6 +242,22 @@ class TestACreateShortUrl:
 
         assert short_url.expires_at is not None
         assert before + delta <= short_url.expires_at <= timezone.now() + delta
+
+    def test_negative_ttl_as_seconds_raises(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            async_to_sync(acreate_short_url)("https://example.com", ttl=-1)
+
+    def test_negative_ttl_as_timedelta_raises(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            async_to_sync(acreate_short_url)("https://example.com", ttl=timedelta(seconds=-1))
+
+    def test_zero_ttl_as_seconds_warns(self) -> None:
+        with pytest.warns(UserWarning, match="expire immediately"):
+            async_to_sync(acreate_short_url)("https://example.com", ttl=0)
+
+    def test_zero_ttl_as_timedelta_warns(self) -> None:
+        with pytest.warns(UserWarning, match="expire immediately"):
+            async_to_sync(acreate_short_url)("https://example.com", ttl=timedelta(0))
 
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
