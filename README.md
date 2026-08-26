@@ -96,7 +96,7 @@ short_url = create_short_url("https://example.com/a/very/long/url", expiration=e
 short_path = reverse("django_wee:redirect", args=[short_url.code])
 ```
 
-If no expiration is provided, the short URL does not expire.
+If no expiration is provided, the `WEE_DEFAULT_TTL` setting is used as a fallback. If that setting is also absent, the short URL does not expire.
 
 Alternatively, pass a `ttl` (time-to-live) to compute the expiration as a
 offset from now. An `int` or `float` is interpreted as seconds, and a
@@ -166,6 +166,7 @@ python manage.py delete_expired_short_urls --older-than "7 days" --dry-run
 | `WEE_CACHE_PREFIX` | `"WEE"` | Prefix used for short-URL cache keys. Keys use the `prefix:code` format. |
 | `WEE_MIN_LEN` | `8` | Minimum length of the generated Sqids code. |
 | `WEE_ALPHABET` | Sqids default | Character set used to generate codes. |
+| `WEE_DEFAULT_TTL` | `None` | Project-wide default TTL used when no explicit expiration is given. Accepts `int` or `float` (seconds), `timedelta` or `None` (no expiration). |
 | `WEE_PERMANENT_REDIRECT` | `True` | If `True`, the redirect view returns HTTP 301; otherwise HTTP 302. |
 
 ## License
