@@ -8,54 +8,25 @@ redirect path ready to be included in a response.
 import logging
 from datetime import datetime, timedelta
 from typing import overload
-from urllib.parse import urlparse
 
 from asgiref.sync import sync_to_async
-from django.utils import timezone
 
-from ._internal import acache_short_url, aget_cached_short_code, cache_short_url, get_cached_short_code
+from ._internal import (
+    acache_short_url,
+    aget_cached_short_code,
+    cache_short_url,
+    get_cached_short_code,
+    normalize_url,
+    resolve_expiration,
+)
 from .models import ShortUrl
 
 logger = logging.getLogger("django_wee")
 
 
-def _normalize_url(url: str) -> str:
-    """Prepend ``https://`` when *url* has no scheme.
-
-    A schemeless URL such as ``"example.com"`` becomes
-    ``"https://example.com"``. Protocol-relative URLs (``"//example.com"``)
-    receive only the ``https:`` prefix. URLs that already include a scheme
-    are returned unchanged.
-    """
-    if urlparse(url).scheme:
-        return url
-    if url.startswith("//"):
-        return f"https:{url}"
-    return f"https://{url}"
-
-
-def _resolve_expiration(
-    expiration: datetime | None,
-    ttl: int | float | timedelta | None,
-) -> datetime | None:
-    """Resolve an expiration datetime from *expiration* or *ttl*.
-
-    Exactly one of *expiration* or *ttl* may be given. *ttl* is interpreted
-    as a duration from now: an :class:`int` or :class:`float` is treated as
-    a number of seconds and a :class:`~datetime.timedelta` is used directly.
-    """
-    if expiration is not None and ttl is not None:
-        msg = "expiration and ttl are mutually exclusive"
-        raise ValueError(msg)
-    if ttl is None:
-        return expiration
-    delta = ttl if isinstance(ttl, timedelta) else timedelta(seconds=ttl)
-    return timezone.now() + delta
-
-
 @overload
 def create_short_url(url: str) -> ShortUrl:
-    """Create a short URL that never expires."""
+    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset."""
 
 
 @overload
@@ -81,6 +52,10 @@ def create_short_url(
     :func:`~django.urls.reverse` and the ``django_wee:redirect`` view
     using ``short_url.code``.
 
+    When neither *expiration* nor *ttl* is given, the ``WEE_DEFAULT_TTL``
+    Django setting is used as the TTL fallback. If that setting is also absent,
+    the short URL will not expire.
+
     Args:
         url: The destination URL to shorten.
         expiration: Optional timezone-aware datetime at which the short
@@ -98,8 +73,8 @@ def create_short_url(
         ValueError: If both *expiration* and *ttl* are given.
     """
     short_url = ShortUrl(
-        url=_normalize_url(url),
-        expires_at=_resolve_expiration(expiration, ttl),
+        url=normalize_url(url),
+        expires_at=resolve_expiration(expiration, ttl),
     )
     short_url.full_clean()
     short_url.save()
@@ -115,7 +90,7 @@ def create_short_url(
 
 @overload
 async def acreate_short_url(url: str) -> ShortUrl:
-    """Create a short URL that never expires."""
+    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset."""
 
 
 @overload
@@ -143,6 +118,10 @@ async def acreate_short_url(
     :func:`~django.urls.reverse` and the ``django_wee:redirect`` view
     using ``short_url.code``.
 
+    When neither *expiration* nor *ttl* is given, the ``WEE_DEFAULT_TTL``
+    Django setting is used as the TTL fallback. If that setting is also absent,
+    the short URL will not expire.
+
     Args:
         url: The destination URL to shorten.
         expiration: Optional timezone-aware datetime at which the short
@@ -160,8 +139,8 @@ async def acreate_short_url(
         ValueError: If both *expiration* and *ttl* are given.
     """
     short_url = ShortUrl(
-        url=_normalize_url(url),
-        expires_at=_resolve_expiration(expiration, ttl),
+        url=normalize_url(url),
+        expires_at=resolve_expiration(expiration, ttl),
     )
     await sync_to_async(short_url.full_clean)()
     await short_url.asave()

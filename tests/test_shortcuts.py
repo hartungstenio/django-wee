@@ -76,6 +76,38 @@ class TestCreateShortUrl:
         with pytest.raises(ValueError, match="mutually exclusive"):
             create_short_url("https://example.com", expiration=expiration, ttl=3600)  # type: ignore[call-overload]
 
+    def test_no_expiration_when_default_not_set(self) -> None:
+        short_url = create_short_url("https://example.com")
+        assert short_url.expires_at is None
+
+    @override_settings(WEE_DEFAULT_TTL=3600)
+    def test_uses_wee_default_expiration_as_int_seconds(self) -> None:
+        before = timezone.now()
+
+        short_url = create_short_url("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=3600) <= short_url.expires_at <= timezone.now() + timedelta(seconds=3600)
+
+    @override_settings(WEE_DEFAULT_TTL=1.5)
+    def test_uses_wee_default_expiration_as_float_seconds(self) -> None:
+        before = timezone.now()
+
+        short_url = create_short_url("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=1.5) <= short_url.expires_at <= timezone.now() + timedelta(seconds=1.5)
+
+    @override_settings(WEE_DEFAULT_TTL=timedelta(hours=2))
+    def test_uses_wee_default_expiration_as_timedelta(self) -> None:
+        before = timezone.now()
+        delta = timedelta(hours=2)
+
+        short_url = create_short_url("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + delta <= short_url.expires_at <= timezone.now() + delta
+
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
             create_short_url("not a url")
@@ -162,6 +194,38 @@ class TestACreateShortUrl:
         expiration = timezone.now() + timedelta(days=1)
         with pytest.raises(ValueError, match="mutually exclusive"):
             async_to_sync(acreate_short_url)("https://example.com", expiration=expiration, ttl=3600)  # type: ignore[call-overload]
+
+    def test_no_expiration_when_default_not_set(self) -> None:
+        short_url = async_to_sync(acreate_short_url)("https://example.com")
+        assert short_url.expires_at is None
+
+    @override_settings(WEE_DEFAULT_TTL=3600)
+    def test_uses_wee_default_expiration_as_int_seconds(self) -> None:
+        before = timezone.now()
+
+        short_url = async_to_sync(acreate_short_url)("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=3600) <= short_url.expires_at <= timezone.now() + timedelta(seconds=3600)
+
+    @override_settings(WEE_DEFAULT_TTL=1.5)
+    def test_uses_wee_default_expiration_as_float_seconds(self) -> None:
+        before = timezone.now()
+
+        short_url = async_to_sync(acreate_short_url)("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=1.5) <= short_url.expires_at <= timezone.now() + timedelta(seconds=1.5)
+
+    @override_settings(WEE_DEFAULT_TTL=timedelta(hours=2))
+    def test_uses_wee_default_expiration_as_timedelta(self) -> None:
+        before = timezone.now()
+        delta = timedelta(hours=2)
+
+        short_url = async_to_sync(acreate_short_url)("https://example.com")
+
+        assert short_url.expires_at is not None
+        assert before + delta <= short_url.expires_at <= timezone.now() + delta
 
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
