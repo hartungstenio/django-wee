@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -15,15 +16,24 @@ from .factories import ShortUrlFactory
 
 @pytest.mark.django_db
 class TestCreateShortUrl:
-    def test_returns_persisted_short_url(self) -> None:
+    def test_persists_to_db_and_populates_cache(self) -> None:
         short_url = create_short_url("https://example.com")
         persisted = ShortUrl.objects.get(url="https://example.com")
-        assert short_url == persisted
 
-    def test_persists_to_db_and_populates_cache(self) -> None:
-        create_short_url("https://example.com")
-        short_url = ShortUrl.objects.get(url="https://example.com")
-        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
+        assert short_url == persisted
+        assert get_short_url_cache().get(f"WEE:{persisted.code}") == "https://example.com"
+
+    def test_suppresses_cache_errors(self) -> None:
+        cache = get_short_url_cache()
+
+        with mock.patch.object(cache, "set", side_effect=Exception) as mock_set:
+            short_url = create_short_url("https://example.com")
+
+        persisted = ShortUrl.objects.get(url="https://example.com")
+
+        assert short_url == persisted
+        mock_set.assert_called_once()
+        assert get_short_url_cache().get(f"WEE:{persisted.code}") is None
 
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
@@ -93,15 +103,24 @@ class TestCreateShortUrl:
 
 @pytest.mark.django_db
 class TestACreateShortUrl:
-    def test_returns_persisted_short_url(self) -> None:
+    def test_persists_to_db_and_populates_cache(self) -> None:
         short_url = async_to_sync(acreate_short_url)("https://example.com")
         persisted = ShortUrl.objects.get(url="https://example.com")
-        assert short_url == persisted
 
-    def test_persists_to_db_and_populates_cache(self) -> None:
-        async_to_sync(acreate_short_url)("https://example.com")
-        short_url = ShortUrl.objects.get(url="https://example.com")
-        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
+        assert short_url == persisted
+        assert get_short_url_cache().get(f"WEE:{persisted.code}") == "https://example.com"
+
+    def test_suppresses_cache_errors(self) -> None:
+        cache = get_short_url_cache()
+
+        with mock.patch.object(cache, "aset", side_effect=Exception) as mock_set:
+            short_url = async_to_sync(acreate_short_url)("https://example.com")
+
+        persisted = ShortUrl.objects.get(url="https://example.com")
+
+        assert short_url == persisted
+        mock_set.assert_awaited_once()
+        assert get_short_url_cache().get(f"WEE:{persisted.code}") is None
 
     def test_persists_expiration(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
@@ -142,7 +161,7 @@ class TestACreateShortUrl:
     def test_expiration_and_ttl_are_mutually_exclusive(self) -> None:
         expiration = timezone.now() + timedelta(days=1)
         with pytest.raises(ValueError, match="mutually exclusive"):
-            async_to_sync(acreate_short_url)("https://example.com", expiration=expiration, ttl=3600)
+            async_to_sync(acreate_short_url)("https://example.com", expiration=expiration, ttl=3600)  # type: ignore[call-overload]
 
     def test_invalid_url_raises(self) -> None:
         with pytest.raises(ValidationError):
@@ -175,26 +194,50 @@ class TestResolveShortUrl:
         short_url = ShortUrlFactory.create()
         get_short_url_cache().set(f"WEE:{short_url.code}", short_url.url)
 
-        assert resolve_short_url(short_url.code) == short_url.url
+        resolved_url = resolve_short_url(short_url.code)
+
+        assert resolved_url == short_url.url
 
     @override_settings(WEE_CACHE_PREFIX="custom")
     def test_uses_configured_cache_prefix(self) -> None:
         short_url = ShortUrlFactory.create()
         get_short_url_cache().set(f"custom:{short_url.code}", short_url.url)
 
-        assert resolve_short_url(short_url.code) == short_url.url
+        resolved_url = resolve_short_url(short_url.code)
 
-    def test_returns_url_from_db(self) -> None:
+        assert resolved_url == short_url.url
+
+    def test_returns_and_caches_url_from_db(self) -> None:
         short_url = ShortUrlFactory.create()
 
-        assert resolve_short_url(short_url.code) == short_url.url
+        resolved_url = resolve_short_url(short_url.code)
 
-    def test_populates_cache_after_db_lookup(self) -> None:
-        short_url = ShortUrlFactory.create()
-
-        resolve_short_url(short_url.code)
-
+        assert resolved_url == short_url.url
         assert get_short_url_cache().get(f"WEE:{short_url.code}") == short_url.url
+
+    @override_settings(WEE_CACHE_PREFIX="custom")
+    def test_returns_and_caches_url_from_db_custom_prefix(self) -> None:
+        short_url = ShortUrlFactory.create()
+
+        resolved_url = resolve_short_url(short_url.code)
+
+        assert resolved_url == short_url.url
+        assert get_short_url_cache().get(f"custom:{short_url.code}") == short_url.url
+
+    def test_suppresses_cache_errors(self) -> None:
+        short_url = ShortUrlFactory.create()
+        cache = get_short_url_cache()
+
+        with mock.patch.multiple(
+            cache,
+            get=mock.Mock(side_effect=Exception),
+            set=mock.Mock(side_effect=Exception),
+        ):
+            resolved_url = resolve_short_url(short_url.code)
+
+            assert resolved_url == short_url.url
+            cache.get.assert_called_once()
+            cache.set.assert_called_once()
 
     def test_expired_code_raises(self) -> None:
         short_url = ShortUrlFactory.create(expires_at=timezone.now())
@@ -213,26 +256,50 @@ class TestAResolveShortUrl:
         short_url = ShortUrlFactory.create()
         get_short_url_cache().set(f"WEE:{short_url.code}", short_url.url)
 
-        assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
+        resolved_url = async_to_sync(aresolve_short_url)(short_url.code)
+
+        assert resolved_url == short_url.url
 
     @override_settings(WEE_CACHE_PREFIX="custom")
     def test_uses_configured_cache_prefix(self) -> None:
         short_url = ShortUrlFactory.create()
         get_short_url_cache().set(f"custom:{short_url.code}", short_url.url)
 
-        assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
+        resolved_url = async_to_sync(aresolve_short_url)(short_url.code)
 
-    def test_returns_url_from_db(self) -> None:
+        assert resolved_url == short_url.url
+
+    def test_returns_and_caches_url_from_db(self) -> None:
         short_url = ShortUrlFactory.create()
 
-        assert async_to_sync(aresolve_short_url)(short_url.code) == short_url.url
+        resolved_url = async_to_sync(aresolve_short_url)(short_url.code)
 
-    def test_populates_cache_after_db_lookup(self) -> None:
-        short_url = ShortUrlFactory.create()
-
-        async_to_sync(aresolve_short_url)(short_url.code)
-
+        assert resolved_url == short_url.url
         assert get_short_url_cache().get(f"WEE:{short_url.code}") == short_url.url
+
+    @override_settings(WEE_CACHE_PREFIX="custom")
+    def test_returns_and_caches_url_from_db_custom_prefix(self) -> None:
+        short_url = ShortUrlFactory.create()
+
+        resolved_url = async_to_sync(aresolve_short_url)(short_url.code)
+
+        assert resolved_url == short_url.url
+        assert get_short_url_cache().get(f"custom:{short_url.code}") == short_url.url
+
+    def test_suppresses_cache_errors(self) -> None:
+        short_url = ShortUrlFactory.create()
+        cache = get_short_url_cache()
+
+        with mock.patch.multiple(
+            cache,
+            aget=mock.AsyncMock(side_effect=Exception),
+            aset=mock.AsyncMock(side_effect=Exception),
+        ):
+            resolved_url = async_to_sync(aresolve_short_url)(short_url.code)
+
+            assert resolved_url == short_url.url
+            cache.aget.assert_awaited_once()
+            cache.aset.assert_awaited_once()
 
     def test_expired_code_raises(self) -> None:
         short_url = ShortUrlFactory.create(expires_at=timezone.now())

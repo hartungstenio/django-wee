@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Cache errors are now suppressed instead of propagating to the caller. A cache failure no longer prevents URL creation or resolution.
+- `WEE_CACHE_TIMEOUT` setting was being ignored — `get_short_url_cache_timeout()` was incorrectly reading `WEE_CACHE_ALIAS` instead.
+
+### Added
+
+- All significant operations now emit structured log records via the `django_wee` logger: URL creation (`INFO`), cache hits/misses/writes and redirects (`DEBUG`), and cache errors (`ERROR`). Enable with a standard Django `LOGGING` configuration targeting the `django_wee` logger.
+
 ## [0.2.2] - 2026-08-24
 
 ### Added

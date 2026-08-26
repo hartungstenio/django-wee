@@ -214,7 +214,7 @@ select = [
   "RUF",
   "TRY",
 ]
-ignore = ["COM812"]
+ignore = ["COM812", "SIM105"]
 typing-modules = ["django_wee._compat"]
 
 [tool.ruff.lint.extend-per-file-ignores]
