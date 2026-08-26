@@ -22,6 +22,7 @@
 - Preserve strict typing and existing type annotations; production code is checked with mypy and Pyrefly.
 - Follow the existing Ruff configuration, including a 120-character line limit.
 - Use Django ORM and cache APIs rather than duplicating persistence or cache logic.
+- Read all `WEE_*` Django settings exclusively through the accessors in `src/django_wee/_settings.py`; never call `getattr(settings, "WEE_*", ...)` directly elsewhere.
 - Use timezone-aware datetimes through `django.utils.timezone` for expiration behavior.
 - Keep sync and async public APIs behaviorally equivalent.
 

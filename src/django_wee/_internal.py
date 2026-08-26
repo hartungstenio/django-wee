@@ -5,47 +5,38 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from django.conf import settings
-from django.core.cache import BaseCache, caches
-from django.http import HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.utils import timezone
 
+from ._settings import (
+    get_default_ttl,
+    get_redirect_response,
+    get_short_url_cache,
+    get_short_url_cache_key,
+    get_short_url_cache_timeout,
+)
+
 if TYPE_CHECKING:
+    from django.http import HttpResponse
+
     from .models import ShortUrl
 
 logger = logging.getLogger("django_wee")
 
 
-def get_short_url_cache() -> BaseCache:
-    return caches[getattr(settings, "WEE_CACHE_ALIAS", "default")]
-
-
-def get_short_url_cache_timeout() -> float:
-    return getattr(settings, "WEE_CACHE_TIMEOUT", 3600)
-
-
-def get_short_url_cache_key(code: str) -> str:
-    return f"{getattr(settings, 'WEE_CACHE_PREFIX', 'WEE')}:{code}"
-
-
-def get_default_ttl() -> float | int | timedelta | None:
-    """Return the value of ``WEE_DEFAULT_TTL`` from Django settings.
-
-    Returns ``None`` when the setting is not defined, which means short URLs
-    created without an explicit *expiration* or *ttl* will not expire.
-    """
-    return getattr(settings, "WEE_DEFAULT_TTL", None)
-
-
 def redirect_to(url: str) -> HttpResponse:
-    if getattr(settings, "WEE_PERMANENT_REDIRECT", True):
-        logger.debug("Redirecting (permanent) to '%s'", url, extra={"url": url})
-        return HttpResponsePermanentRedirect(url)
-    logger.debug("Redirecting (temporary) to '%s'", url, extra={"url": url})
-    return HttpResponseRedirect(url)
+    """Build and return an HTTP redirect response to *url*, logging the outcome."""
+    response = get_redirect_response(url)
+    logger.debug("Redirecting to '%s'", url, extra={"url": url, "status_code": response.status_code})
+    return response
 
 
 def cache_short_url(short_url: ShortUrl) -> None:
+    """Store *short_url*'s destination in the cache.
+
+    The timeout is the greater of ``WEE_CACHE_TIMEOUT`` and the remaining
+    time until ``short_url.expires_at``, so the entry never expires before
+    the short URL itself does. Cache errors are suppressed and logged.
+    """
     cache = get_short_url_cache()
     timeout = get_short_url_cache_timeout()
 
@@ -62,6 +53,7 @@ def cache_short_url(short_url: ShortUrl) -> None:
 
 
 async def acache_short_url(short_url: ShortUrl) -> None:
+    """Async variant of :func:`cache_short_url`."""
     cache = get_short_url_cache()
     timeout = get_short_url_cache_timeout()
 
@@ -78,6 +70,11 @@ async def acache_short_url(short_url: ShortUrl) -> None:
 
 
 def get_cached_short_code(code: str) -> str | None:
+    """Return the cached destination URL for *code*, or ``None`` on miss or error.
+
+    Cache errors are suppressed and logged; callers should fall back to a
+    database lookup when ``None`` is returned.
+    """
     cache = get_short_url_cache()
     cache_key = get_short_url_cache_key(code)
 
@@ -95,6 +92,7 @@ def get_cached_short_code(code: str) -> str | None:
 
 
 async def aget_cached_short_code(code: str) -> str | None:
+    """Async variant of :func:`get_cached_short_code`."""
     cache = get_short_url_cache()
     cache_key = get_short_url_cache_key(code)
 
