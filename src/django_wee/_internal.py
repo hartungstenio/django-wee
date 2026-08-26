@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from urllib.parse import urlparse
 
 from django.utils import timezone
@@ -149,4 +150,17 @@ def resolve_expiration(
         return expiration
 
     delta = ttl if isinstance(ttl, timedelta) else timedelta(seconds=ttl)
+
+    _zero: Final[timedelta] = timedelta(0)
+    if delta < _zero:
+        msg = "ttl must be a positive duration"
+        raise ValueError(msg)
+
+    if delta == _zero:
+        warnings.warn(
+            "ttl is zero — the short URL will expire immediately",
+            UserWarning,
+            stacklevel=3,
+        )
+
     return timezone.now() + delta
