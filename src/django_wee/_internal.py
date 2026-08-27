@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlparse
 
+from asgiref.sync import sync_to_async
+from django.contrib.sites.models import Site
+from django.core.exceptions import SynchronousOnlyOperation
 from django.utils import timezone
 
 from ._settings import (
@@ -17,7 +20,7 @@ from ._settings import (
 )
 
 if TYPE_CHECKING:
-    from django.http import HttpResponse
+    from django.http import HttpRequest, HttpResponse
 
     from .models import ShortUrl
 
@@ -164,3 +167,21 @@ def resolve_expiration(
         )
 
     return timezone.now() + delta
+
+
+def get_current_site(request: HttpRequest | None = None) -> Site:
+    """Get the current site."""
+    return Site.objects.get_current(request)
+
+
+async def aget_current_site(request: HttpRequest | None = None) -> Site:
+    """Get the current site.
+
+    Async version of :func:`get_current_site`.
+
+    Tries to take advantage of the site's cache before switching context.
+    """
+    try:
+        return Site.objects.get_current(request)
+    except SynchronousOnlyOperation:
+        return await sync_to_async(Site.objects.get_current)()

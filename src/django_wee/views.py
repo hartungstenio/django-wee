@@ -8,6 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext as _
 
+from django_wee._internal import aget_current_site, get_current_site
+
 from ._internal import redirect_to
 from .models import ShortUrl
 from .shortcuts import aresolve_short_url, resolve_short_url
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
 
 
-def redirect(_request: HttpRequest, code: str) -> HttpResponse:
+def redirect(request: HttpRequest, code: str) -> HttpResponse:
     """Resolve *code* to its destination URL and return a redirect response.
 
     Checks the cache first; falls back to a database lookup via
@@ -34,8 +36,9 @@ def redirect(_request: HttpRequest, code: str) -> HttpResponse:
     Raises:
         Http404: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
+    site = get_current_site(request)
     try:
-        url = resolve_short_url(code)
+        url = resolve_short_url(code, site)
     except ObjectDoesNotExist as exc:
         msg = _("No %s matches the given query.") % ShortUrl._meta.object_name
         raise Http404(msg) from exc
@@ -43,7 +46,7 @@ def redirect(_request: HttpRequest, code: str) -> HttpResponse:
         return redirect_to(url)
 
 
-async def aredirect(_request: HttpRequest, code: str) -> HttpResponse:
+async def aredirect(request: HttpRequest, code: str) -> HttpResponse:
     """Resolve *code* to its destination URL and return a redirect response.
 
     Async version of :func:`redirect`.
@@ -63,8 +66,9 @@ async def aredirect(_request: HttpRequest, code: str) -> HttpResponse:
     Raises:
         Http404: If no :class:`~django_wee.models.ShortUrl` matches *code*.
     """
+    site = await aget_current_site(request)
     try:
-        url = await aresolve_short_url(code)
+        url = await aresolve_short_url(code, site)
     except ObjectDoesNotExist as exc:
         msg = _("No %s matches the given query.") % ShortUrl._meta.object_name
         raise Http404(msg) from exc

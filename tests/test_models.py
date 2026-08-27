@@ -78,7 +78,7 @@ class TestShortUrl:
 
     def test_allows_duplicate_urls(self) -> None:
         existing = ShortUrlFactory.create()
-        duplicate = ShortUrl.objects.create(url=existing.url)
+        duplicate = ShortUrl.objects.create(url=existing.url, site=existing.site)
 
         assert duplicate.pk is not None
         assert duplicate.url == existing.url
