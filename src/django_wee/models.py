@@ -1,6 +1,7 @@
 """Database models for django-wee."""
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -61,6 +62,14 @@ class ShortUrl(models.Model):
         null=True,
         help_text=_("When will this short url expire"),
         db_comment="Expiration timestamp",
+    )
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        related_name="short_urls",
+        verbose_name=_("site"),
+        help_text=_("Site this URL belongs to"),
+        db_comment="Foreign key to the site owning this URL",
     )
 
     objects = ShortUrlQuerySet.as_manager()

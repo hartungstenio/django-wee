@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 from typing import overload
 
 from asgiref.sync import sync_to_async
+from django.contrib.sites.models import Site
+
+from django_wee._internal import aget_current_site, get_current_site
 
 from ._internal import (
     acache_short_url,
@@ -25,18 +28,40 @@ logger = logging.getLogger("django_wee")
 
 
 @overload
-def create_short_url(url: str) -> ShortUrl:
-    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset."""
+def create_short_url(url: str, *, site: Site | None = None) -> ShortUrl:
+    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset.
+
+    Args:
+        url: The destination URL to shorten.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 @overload
-def create_short_url(url: str, *, expiration: datetime) -> ShortUrl:
-    """Create a short URL that expires at *expiration*."""
+def create_short_url(url: str, *, expiration: datetime, site: Site | None = None) -> ShortUrl:
+    """Create a short URL that expires at *expiration*.
+
+    Args:
+        url: The destination URL to shorten.
+        expiration: Timezone-aware datetime at which the short URL stops resolving.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 @overload
-def create_short_url(url: str, *, ttl: int | float | timedelta) -> ShortUrl:
-    """Create a short URL that expires after *ttl* from now."""
+def create_short_url(url: str, *, ttl: int | float | timedelta, site: Site | None = None) -> ShortUrl:
+    """Create a short URL that expires after *ttl* from now.
+
+    Args:
+        url: The destination URL to shorten.
+        ttl: Time-to-live duration from now. An :class:`int` or :class:`float` is
+            interpreted as seconds, and a :class:`~datetime.timedelta` is used
+            directly.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 def create_short_url(
@@ -44,6 +69,7 @@ def create_short_url(
     *,
     expiration: datetime | None = None,
     ttl: int | float | timedelta | None = None,
+    site: Site | None = None,
 ) -> ShortUrl:
     """Create a short URL for the given URL and return the persisted instance.
 
@@ -64,6 +90,8 @@ def create_short_url(
             :class:`float` is interpreted as seconds, and a
             :class:`~datetime.timedelta` is used directly. Mutually
             exclusive with *expiration*.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance.
+            If not provided, the current site is used.
 
     Returns:
         The persisted :class:`~django_wee.models.ShortUrl` instance.
@@ -72,9 +100,12 @@ def create_short_url(
         ValidationError: If *url* fails model-level validation.
         ValueError: If both *expiration* and *ttl* are given.
     """
+    if site is None:
+        site = get_current_site()
     short_url = ShortUrl(
         url=normalize_url(url),
         expires_at=resolve_expiration(expiration, ttl),
+        site=site,
     )
     short_url.full_clean()
     short_url.save()
@@ -89,18 +120,40 @@ def create_short_url(
 
 
 @overload
-async def acreate_short_url(url: str) -> ShortUrl:
-    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset."""
+async def acreate_short_url(url: str, *, site: Site | None = None) -> ShortUrl:
+    """Create a short URL using the ``WEE_DEFAULT_TTL`` setting, or no expiration if unset.
+
+    Args:
+        url: The destination URL to shorten.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 @overload
-async def acreate_short_url(url: str, *, expiration: datetime) -> ShortUrl:
-    """Create a short URL that expires at *expiration*."""
+async def acreate_short_url(url: str, *, expiration: datetime, site: Site | None = None) -> ShortUrl:
+    """Create a short URL that expires at *expiration*.
+
+    Args:
+        url: The destination URL to shorten.
+        expiration: Timezone-aware datetime at which the short URL stops resolving.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 @overload
-async def acreate_short_url(url: str, *, ttl: int | float | timedelta) -> ShortUrl:
-    """Create a short URL that expires after *ttl* from now."""
+async def acreate_short_url(url: str, *, ttl: int | float | timedelta, site: Site | None = None) -> ShortUrl:
+    """Create a short URL that expires after *ttl* from now.
+
+    Args:
+        url: The destination URL to shorten.
+        ttl: Time-to-live duration from now. An :class:`int` or :class:`float` is
+            interpreted as seconds, and a :class:`~datetime.timedelta` is used
+            directly.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance. If not
+            provided, the current site is used.
+    """
 
 
 async def acreate_short_url(
@@ -108,6 +161,7 @@ async def acreate_short_url(
     *,
     expiration: datetime | None = None,
     ttl: int | float | timedelta | None = None,
+    site: Site | None = None,
 ) -> ShortUrl:
     """Create a short URL for the given URL and return the persisted instance.
 
@@ -130,6 +184,8 @@ async def acreate_short_url(
             :class:`float` is interpreted as seconds, and a
             :class:`~datetime.timedelta` is used directly. Mutually
             exclusive with *expiration*.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance.
+            If not provided, the current site is used.
 
     Returns:
         The persisted :class:`~django_wee.models.ShortUrl` instance.
@@ -138,8 +194,11 @@ async def acreate_short_url(
         ValidationError: If *url* fails model-level validation.
         ValueError: If both *expiration* and *ttl* are given.
     """
+    if site is None:
+        site = await aget_current_site()
     short_url = ShortUrl(
         url=normalize_url(url),
+        site=site,
         expires_at=resolve_expiration(expiration, ttl),
     )
     await sync_to_async(short_url.full_clean)()
@@ -154,37 +213,51 @@ async def acreate_short_url(
     return short_url
 
 
-def resolve_short_url(code: str) -> str:
+def resolve_short_url(code: str, site: Site) -> str:
     """Resolve *code* to its destination URL.
 
     Args:
         code: The short-URL code extracted from the request path.
+        site: The :class:`~django.contrib.sites.models.Site` whose short URLs are
+            being resolved.
+
+    Returns:
+        The destination URL associated with *code* for *site*.
+
     Raises:
-        ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches *code*.
+        ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches
+            *code* for *site*.
     """
     url: str | None = get_cached_short_code(code)
     if not url:
         logger.debug("Fetching short code '%s' from database", code, extra={"code": code})
-        short_url = ShortUrl.objects.alive().get(code=code)  # pyrefly: ignore [missing-attribute]
+        short_url = ShortUrl.objects.alive().get(code=code, site=site)  # pyrefly: ignore [missing-attribute]
         cache_short_url(short_url)
         url = short_url.url
     return url
 
 
-async def aresolve_short_url(code: str) -> str:
+async def aresolve_short_url(code: str, site: Site) -> str:
     """Resolve *code* to its destination URL.
 
-    Async version of :func:`areverse_short_url`.
+    Async version of :func:`resolve_short_url`.
 
     Args:
         code: The short-URL code extracted from the request path.
+        site: The :class:`~django.contrib.sites.models.Site` whose short URLs are
+            being resolved.
+
+    Returns:
+        The destination URL associated with *code* for *site*.
+
     Raises:
-        ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches *code*.
+        ObjectDoesNotExist: If no :class:`~django_wee.models.ShortUrl` matches
+            *code* for *site*.
     """
     url: str | None = await aget_cached_short_code(code)
     if not url:
         logger.debug("Fetching short code '%s' from database", code, extra={"code": code})
-        short_url = await ShortUrl.objects.alive().aget(code=code)  # pyrefly: ignore [missing-attribute]
+        short_url = await ShortUrl.objects.alive().aget(code=code, site=site)  # pyrefly: ignore [missing-attribute]
         await acache_short_url(short_url)
         url = short_url.url
     return url

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Django `Site` integration for URL creation and resolution: `create_short_url`, `acreate_short_url`, and the current-site helpers now accept and use a `site` instance when provided.
+
 ## [0.2.3] - 2026-08-26
 
 ### Fixed
