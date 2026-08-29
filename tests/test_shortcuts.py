@@ -150,6 +150,18 @@ class TestCreateShortUrl:
         short_url = create_short_url("//example.com", site=site)
         assert short_url.url == "https://example.com"
 
+    def test_relative_url_uses_current_site(self, site: Site) -> None:
+        short_url = create_short_url("/s/SoMeCoDe/", site=site)
+        assert short_url.url == "https://example.com/s/SoMeCoDe/"
+
+    def test_invalid_relative_url_raises(self, site: Site) -> None:
+        with pytest.raises(ValueError, match="Relative URLs must belong to the current site"):
+            create_short_url("/definitely-not-a-real-route/", site=site)
+
+    def test_absolute_foreign_url_is_allowed(self, site: Site) -> None:
+        short_url = create_short_url("https://other.example.com/about/", site=site)
+        assert short_url.url == "https://other.example.com/about/"
+
     def test_url_with_scheme_is_unchanged(self, site: Site) -> None:
         short_url = create_short_url("http://example.com", site=site)
         assert short_url.url == "http://example.com"
@@ -284,6 +296,18 @@ class TestACreateShortUrl:
     def test_protocol_relative_url_defaults_to_https(self, site: Site) -> None:
         short_url = async_to_sync(acreate_short_url)("//example.com", site=site)
         assert short_url.url == "https://example.com"
+
+    def test_relative_url_uses_current_site(self, site: Site) -> None:
+        short_url = async_to_sync(acreate_short_url)("/s/SoMeCoDe/", site=site)
+        assert short_url.url == "https://example.com/s/SoMeCoDe/"
+
+    def test_invalid_relative_url_raises(self, site: Site) -> None:
+        with pytest.raises(ValueError, match="Relative URLs must belong to the current site"):
+            async_to_sync(acreate_short_url)("/definitely-not-a-real-route/", site=site)
+
+    def test_absolute_foreign_url_is_allowed(self, site: Site) -> None:
+        short_url = async_to_sync(acreate_short_url)("https://other.example.com/about/", site=site)
+        assert short_url.url == "https://other.example.com/about/"
 
     def test_url_with_scheme_is_unchanged(self, site: Site) -> None:
         short_url = async_to_sync(acreate_short_url)("http://example.com", site=site)

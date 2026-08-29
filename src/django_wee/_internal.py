@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from asgiref.sync import sync_to_async
 from django.contrib.sites.models import Site
 from django.core.exceptions import SynchronousOnlyOperation
+from django.urls import Resolver404, resolve
 from django.utils import timezone
 
 from ._settings import (
@@ -113,18 +114,39 @@ async def aget_cached_short_code(code: str) -> str | None:
     return result
 
 
-def normalize_url(url: str) -> str:
-    """Prepend ``https://`` when *url* has no scheme.
+def normalize_url(url: str, site: Site) -> str:
+    """Normalize *url* to an absolute URL.
 
-    A schemeless URL such as ``"example.com"`` becomes
-    ``"https://example.com"``. Protocol-relative URLs (``"//example.com"``)
-    receive only the ``https:`` prefix. URLs that already include a scheme
-    are returned unchanged.
+    Absolute URLs are returned unchanged. Protocol-relative URLs such as
+    ``"//example.com"`` receive the ``https:`` prefix. Schemeless hostnames such
+    as ``"example.com"`` become ``"https://example.com"``. Relative URLs such as
+    ``"/about/"`` are resolved against the current site domain when *site* is
+    provided.
+
+    Args:
+        url: The URL to normalize.
+        site: Optional :class:`~django.contrib.sites.models.Site` instance used to
+            resolve relative URLs.
+
+    Returns:
+        The normalized absolute URL.
     """
-    if urlparse(url).scheme:
+    parsed = urlparse(url)
+    if parsed.scheme:
         return url
+
     if url.startswith("//"):
         return f"https:{url}"
+
+    if url.startswith("/"):
+        try:
+            resolve(url)
+        except Resolver404 as exc:
+            msg = "Relative URLs must belong to the current site"
+            raise ValueError(msg) from exc
+        else:
+            url = f"{site.domain}{url}"
+
     return f"https://{url}"
 
 

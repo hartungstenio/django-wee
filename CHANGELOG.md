@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Django `Site` integration for URL creation and resolution: `create_short_url`, `acreate_short_url`, and the current-site helpers now accept and use a `site` instance when provided.
 
+### Changed
+
+- Relative URLs are now resolved against the current site when provided, while absolute URLs and schemeless URLs for other domains remain accepted.
+- Invalid relative URLs that do not resolve within the current site now raise a `ValueError` instead of producing an invalid absolute URL.
+
 ## [0.2.3] - 2026-08-26
 
 ### Fixed
