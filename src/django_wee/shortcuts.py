@@ -103,7 +103,7 @@ def create_short_url(
     if site is None:
         site = get_current_site()
     short_url = ShortUrl(
-        url=normalize_url(url),
+        url=normalize_url(url, site=site),
         expires_at=resolve_expiration(expiration, ttl),
         site=site,
     )
@@ -197,7 +197,7 @@ async def acreate_short_url(
     if site is None:
         site = await aget_current_site()
     short_url = ShortUrl(
-        url=normalize_url(url),
+        url=normalize_url(url, site=site),
         site=site,
         expires_at=resolve_expiration(expiration, ttl),
     )
