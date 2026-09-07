@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `django-stubs-ext` is no longer installed as a runtime dependency; it remains only in the type-checking dependency group.
 - Relative URLs are now resolved against the current site when provided, while absolute URLs and schemeless URLs for other domains remain accepted.
 - Invalid relative URLs that do not resolve within the current site now raise a `ValueError` instead of producing an invalid absolute URL.
 
