@@ -27,6 +27,7 @@ dependencies = [
   "asgiref (>=3.3)",
   "django-sqids (>=0.2.2)",
   "django (>=5.2)",
+  "sqids (>=0.5.2)",
   "typing-extensions; python_version < \"3.11\"",
 ]
 dynamic = ["version"]
@@ -39,6 +40,7 @@ Source = "https://github.com/hartungstenio/django-wee"
 [dependency-groups]
 dev = [
   "coverage[toml] (>=6.5)",
+  "deptry",
   "factory-boy",
   "faker",
   "pre-commit",
