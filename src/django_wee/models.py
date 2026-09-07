@@ -1,5 +1,7 @@
 """Database models for django-wee."""
 
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db import models
@@ -7,10 +9,16 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_sqids import SqidsField
-from django_stubs_ext.db.models import TypedModelMeta
 from sqids.constants import DEFAULT_ALPHABET
 
 from ._compat import Self, override
+
+if TYPE_CHECKING:
+    from django_stubs_ext.db.models import TypedModelMeta
+
+    ModelMeta = TypedModelMeta
+else:
+    ModelMeta = object
 
 
 class ShortUrlQuerySet(models.QuerySet["ShortUrl"]):
@@ -74,7 +82,7 @@ class ShortUrl(models.Model):
 
     objects = ShortUrlQuerySet.as_manager()
 
-    class Meta(TypedModelMeta):
+    class Meta(ModelMeta):
         """Metadata for :class:`ShortUrl`."""
 
         verbose_name = _("Short URL")
