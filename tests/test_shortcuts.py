@@ -130,6 +130,21 @@ class TestCreateShortUrl:
         with pytest.warns(UserWarning, match="expire immediately"):
             create_short_url("https://example.com", ttl=timedelta(0), site=site)
 
+    @override_settings(WEE_CACHE_TIMEOUT=None)
+    def test_none_cache_timeout_does_not_break_short_url_creation(self, site: Site) -> None:
+        short_url = create_short_url("https://example.com", site=site)
+
+        assert short_url.pk is not None
+        assert ShortUrl.objects.filter(pk=short_url.pk, url="https://example.com").exists()
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
+
+    @override_settings(WEE_CACHE_ALIAS="missing")
+    def test_invalid_cache_alias_does_not_break_short_url_creation(self, site: Site) -> None:
+        short_url = create_short_url("https://example.com", site=site)
+
+        assert short_url.pk is not None
+        assert ShortUrl.objects.filter(pk=short_url.pk, url="https://example.com").exists()
+
     def test_invalid_url_raises(self, site: Site) -> None:
         with pytest.raises(ValidationError):
             create_short_url("not a url", site=site)
@@ -276,6 +291,29 @@ class TestACreateShortUrl:
     def test_zero_ttl_as_timedelta_warns(self, site: Site) -> None:
         with pytest.warns(UserWarning, match="expire immediately"):
             async_to_sync(acreate_short_url)("https://example.com", ttl=timedelta(0), site=site)
+
+    @override_settings(WEE_CACHE_TIMEOUT=None)
+    def test_none_cache_timeout_does_not_break_short_url_creation(self, site: Site) -> None:
+        short_url = async_to_sync(acreate_short_url)("https://example.com", site=site)
+
+        assert short_url.pk is not None
+        assert ShortUrl.objects.filter(pk=short_url.pk, url="https://example.com").exists()
+        assert get_short_url_cache().get(f"WEE:{short_url.code}") == "https://example.com"
+
+    def test_persists_ttl_as_int_seconds_explicit(self, site: Site) -> None:
+        before = timezone.now()
+
+        short_url = async_to_sync(acreate_short_url)("https://example.com", ttl=3600, site=site)
+
+        assert short_url.expires_at is not None
+        assert before + timedelta(seconds=3600) <= short_url.expires_at <= timezone.now() + timedelta(seconds=3600)
+
+    @override_settings(WEE_CACHE_ALIAS="missing")
+    def test_invalid_cache_alias_does_not_break_short_url_creation(self, site: Site) -> None:
+        short_url = async_to_sync(acreate_short_url)("https://example.com", site=site)
+
+        assert short_url.pk is not None
+        assert ShortUrl.objects.filter(pk=short_url.pk, url="https://example.com").exists()
 
     def test_invalid_url_raises(self, site: Site) -> None:
         with pytest.raises(ValidationError):
