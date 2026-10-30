@@ -42,15 +42,14 @@ def cache_short_url(short_url: ShortUrl) -> None:
     time until ``short_url.expires_at``, so the entry never expires before
     the short URL itself does. Cache errors are suppressed and logged.
     """
-    cache = get_short_url_cache()
     timeout = get_short_url_cache_timeout()
-
     if short_url.expires_at:
         expiration = short_url.expires_at - timezone.now()
-        timeout = max(timeout, expiration.total_seconds())
+        timeout = max(timeout, expiration.total_seconds()) if timeout is not None else expiration.total_seconds()
 
     cache_key = get_short_url_cache_key(short_url.code)
     try:
+        cache = get_short_url_cache()
         cache.set(cache_key, short_url.url, timeout=timeout)
         logger.debug("Cached short code '%s'", short_url.code, extra={"code": short_url.code, "timeout": timeout})
     except Exception:
@@ -59,15 +58,14 @@ def cache_short_url(short_url: ShortUrl) -> None:
 
 async def acache_short_url(short_url: ShortUrl) -> None:
     """Async variant of :func:`cache_short_url`."""
-    cache = get_short_url_cache()
     timeout = get_short_url_cache_timeout()
-
     if short_url.expires_at:
         expiration = short_url.expires_at - timezone.now()
-        timeout = max(timeout, expiration.total_seconds())
+        timeout = max(timeout, expiration.total_seconds()) if timeout is not None else expiration.total_seconds()
 
     cache_key = get_short_url_cache_key(short_url.code)
     try:
+        cache = get_short_url_cache()
         await cache.aset(cache_key, short_url.url, timeout=timeout)
         logger.debug("Cached short code '%s'", short_url.code, extra={"code": short_url.code, "timeout": timeout})
     except Exception:
@@ -80,10 +78,10 @@ def get_cached_short_code(code: str) -> str | None:
     Cache errors are suppressed and logged; callers should fall back to a
     database lookup when ``None`` is returned.
     """
-    cache = get_short_url_cache()
     cache_key = get_short_url_cache_key(code)
 
     try:
+        cache = get_short_url_cache()
         result: str | None = cache.get(cache_key)
     except Exception:
         logger.exception("Could not read short code '%s' from cache", code, extra={"cache_key": cache_key})
@@ -98,10 +96,10 @@ def get_cached_short_code(code: str) -> str | None:
 
 async def aget_cached_short_code(code: str) -> str | None:
     """Async variant of :func:`get_cached_short_code`."""
-    cache = get_short_url_cache()
     cache_key = get_short_url_cache_key(code)
 
     try:
+        cache = get_short_url_cache()
         result: str | None = await cache.aget(cache_key)
     except Exception:
         logger.exception("Could not read short code '%s' from cache", code, extra={"cache_key": cache_key})

@@ -231,7 +231,7 @@ def resolve_short_url(code: str, site: Site) -> str:
     url: str | None = get_cached_short_code(code)
     if not url:
         logger.debug("Fetching short code '%s' from database", code, extra={"code": code})
-        short_url = ShortUrl.objects.alive().get(code=code, site=site)  # pyrefly: ignore [missing-attribute]
+        short_url: ShortUrl = ShortUrl.objects.alive().get(code=code, site=site)  # pyrefly: ignore [missing-attribute]
         cache_short_url(short_url)
         url = short_url.url
     return url
@@ -257,7 +257,9 @@ async def aresolve_short_url(code: str, site: Site) -> str:
     url: str | None = await aget_cached_short_code(code)
     if not url:
         logger.debug("Fetching short code '%s' from database", code, extra={"code": code})
-        short_url = await ShortUrl.objects.alive().aget(code=code, site=site)  # pyrefly: ignore [missing-attribute]
+        short_url: ShortUrl = await ShortUrl.objects.alive().aget(  # pyrefly: ignore [missing-attribute]
+            code=code, site=site
+        )
         await acache_short_url(short_url)
         url = short_url.url
     return url
